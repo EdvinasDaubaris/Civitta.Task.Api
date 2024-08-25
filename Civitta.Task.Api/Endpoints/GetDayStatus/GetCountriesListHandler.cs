@@ -11,14 +11,16 @@ namespace Civitta.Task1.Api.Endpoints.GetDayStatus
     {
         private readonly DatabaseContext _dbContext;
         private readonly IEnricoService _enricoService;
-        public GetCountriesListHandler(DatabaseContext dbContext)
+        public GetCountriesListHandler(DatabaseContext dbContext, IEnricoService enricoService)
         {
             _dbContext = dbContext;
+            _enricoService = enricoService;
         }
 
         public override void Configure()
         {
             Get("/api/countries/dayStatus");
+            AllowAnonymous();
         }
 
         public override async Task HandleAsync(GetCountriesListRequest request, CancellationToken ct)
@@ -64,35 +66,28 @@ namespace Civitta.Task1.Api.Endpoints.GetDayStatus
             }
             else
             {
-                var isHolidayTask = _enricoService.IsPublicHoliday(normalizeDate, request.CountryCode, request.Region);
-                var isWorkdayTask = _enricoService.IsWorkDay(normalizeDate, request.CountryCode, request.Region);
+                var isHoliday = await _enricoService.IsPublicHoliday(normalizeDate, request.CountryCode, request.Region);
+                var isWorkday = await _enricoService.IsWorkDay(normalizeDate, request.CountryCode, request.Region);
 
-                await Task.WhenAll(isHolidayTask, isWorkdayTask);
-
-                bool isHoliday = await isHolidayTask;
-                bool isWorkday = await isWorkdayTask;
 
                 Response = new GetCountriesListResponse
                 {
                     IsWorkDay = isWorkday,
                     IsHoliday = isHoliday,
-                    IsFreeDay = !dayStatus.IsWorkDay || isHoliday
+                    IsFreeDay = !isWorkday || isHoliday
                 };
 
-                _ = Task.Run(async () =>
+                var newDayStatus = new DayStatus
                 {
-                    var newDayStatus = new DayStatus
-                    {
-                        CountryCode = request.CountryCode,
-                        Date = normalizeDate,
-                        Region = request.Region,
-                        IsWorkDay = isWorkday,
-                        IsHoliday = isHoliday
-                    };
+                    CountryCode = request.CountryCode,
+                    Date = normalizeDate,
+                    Region = request.Region,
+                    IsWorkDay = isWorkday,
+                    IsHoliday = isHoliday
+                };
 
-                    await _dbContext.DayStatuses.AddAsync(newDayStatus);
-                    await _dbContext.SaveChangesAsync();
-                }, ct);
+                await _dbContext.DayStatuses.AddAsync(newDayStatus);
+                await _dbContext.SaveChangesAsync();
             }
 
 

@@ -11,14 +11,16 @@ namespace Civitta.Task1.Api.Endpoints.GetGroupedHolidays
     {
         private readonly DatabaseContext _dbContext;
         private readonly IEnricoService _enricoService;
-        public GetMaxFreeDayInRowCountHandler(DatabaseContext dbContext)
+        public GetMaxFreeDayInRowCountHandler(DatabaseContext dbContext, IEnricoService enricoService)
         {
             _dbContext = dbContext;
+            _enricoService = enricoService;
         }
 
         public override void Configure()
         {
             Get("/api/countries/holidayListByMonth");
+            AllowAnonymous();
         }
 
         public override async Task HandleAsync(GetMaxFreeDayInRowCountRequest request, CancellationToken ct)
@@ -75,7 +77,7 @@ namespace Civitta.Task1.Api.Endpoints.GetGroupedHolidays
                 var holidayList = await _enricoService.GetHolidayForYear(request.Year,request.CountryCode,request.Region);
 
 
-                Response = holidayList.OrderBy(s=>s.Date.Month+s.Date.Day).GroupBy(s=>s.Date.Month).Select(s => new GetMaxFreeDayInRowCountResponse
+                Response = holidayList.OrderBy(s=>s.Date.Month).GroupBy(s=>s.Date.Month).Select(s => new GetMaxFreeDayInRowCountResponse
                 {
                     Month = s.Key,
                     Holidays = s.Select(holiday => new HolidayItemModel
@@ -85,19 +87,16 @@ namespace Civitta.Task1.Api.Endpoints.GetGroupedHolidays
                     }).ToList()
                 }).ToList();
 
-                _ = Task.Run(async () =>
+                var holidays = holidayList.Select(s => new Holiday
                 {
-                    var holidays = holidayList.Select(s => new Holiday
-                    {
-                        CountryId = country.Id,
-                        CountryRegionId = regionId,
-                        Date = new DateTime(s.Date.Year, s.Date.Month, s.Date.Day),
-                        Name = s.Name.FirstOrDefault(s => s.Lang == "en").Text
-                    });
+                    CountryId = country.Id,
+                    CountryRegionId = regionId,
+                    Date = new DateTime(s.Date.Year, s.Date.Month, s.Date.Day),
+                    Name = s.Name.FirstOrDefault(s => s.Lang == "en").Text
+                });
 
-                    await _dbContext.Holidays.AddRangeAsync(holidays);
-                    await _dbContext.SaveChangesAsync();
-                }, ct);
+                await _dbContext.Holidays.AddRangeAsync(holidays);
+                await _dbContext.SaveChangesAsync();
             }
         }
 

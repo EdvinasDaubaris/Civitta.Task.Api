@@ -11,14 +11,16 @@ namespace Civitta.Task1.Api.Endpoints.GetMaxFreeDayInRowCount
     {
         private readonly DatabaseContext _dbContext;
         private readonly IEnricoService _enricoService;
-        public GetMaxFreeDayInRowCountHandler(DatabaseContext dbContext)
+        public GetMaxFreeDayInRowCountHandler(DatabaseContext dbContext, IEnricoService enricoService)
         {
             _dbContext = dbContext;
+            _enricoService = enricoService;
         }
 
         public override void Configure()
         {
             Get("/api/countries/maximumFreeDaysInRowForYear");
+            AllowAnonymous();
         }
 
         public override async Task HandleAsync(GetMaxFreeDayInRowCountRequest request, CancellationToken ct)
@@ -70,19 +72,16 @@ namespace Civitta.Task1.Api.Endpoints.GetMaxFreeDayInRowCount
                    MaximumFreeDayInRowCount = freeDayCountInRow
                  };
 
-                _ = Task.Run(async () =>
+                var newDayStatus = new MaximumFreeDayInRow
                 {
-                    var newDayStatus = new MaximumFreeDayInRow
-                    {
-                        CountryCode = request.CountryCode,
-                        Year = request.Year,
-                        Region = request.Region,
-                        MaximumFreeDayInRowCount = freeDayCountInRow,
-                    };
+                    CountryCode = request.CountryCode,
+                    Year = request.Year,
+                    Region = request.Region,
+                    MaximumFreeDayInRowCount = freeDayCountInRow,
+                };
 
-                    await _dbContext.MaximumFreeDayInRows.AddAsync(newDayStatus);
-                    await _dbContext.SaveChangesAsync();
-                }, ct);
+                await _dbContext.MaximumFreeDayInRows.AddAsync(newDayStatus);
+                await _dbContext.SaveChangesAsync();
             }
         }
 

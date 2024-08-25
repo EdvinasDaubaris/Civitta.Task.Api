@@ -93,7 +93,6 @@ namespace Civitta.Task1.Api.Models
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Region)
-                      .IsRequired()
                       .HasMaxLength(10); 
                 entity.Property(e => e.CountryCode)
                       .IsRequired()

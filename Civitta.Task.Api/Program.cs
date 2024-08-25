@@ -3,11 +3,12 @@ using Civitta.Task1.Api.Services;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using FastEndpoints.Swagger;
+using FastEndpoints.Security;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddFastEndpoints().SwaggerDocument(o =>
+builder.Services.AddAuthorization().AddFastEndpoints().SwaggerDocument(o =>
 {
     o.DocumentSettings = s =>
     {
@@ -17,7 +18,7 @@ builder.Services.AddFastEndpoints().SwaggerDocument(o =>
 });
 builder.Services.AddMemoryCache();
 
-
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IEnricoService, EnricoService>();
 
 
@@ -28,7 +29,8 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 var app = builder.Build();
 
 
-//app.UseAuthorization();
-app.UseFastEndpoints().UseSwaggerGen();
+
+app
+   .UseAuthorization().UseFastEndpoints().UseSwaggerGen();
 
 app.Run();

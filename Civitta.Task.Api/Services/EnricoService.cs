@@ -1,4 +1,5 @@
 ﻿using RestSharp;
+using static Civitta.Task1.Api.Endpoints.GetCountriesList.GetCountriesListHandler;
 using static Civitta.Task1.Api.Services.EnricoService;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -6,9 +7,10 @@ namespace Civitta.Task1.Api.Services
 {
     public interface IEnricoService
     {
-        Task<bool> IsPublicHoliday(DateTime date, string countryCode, string region);
-        Task<bool> IsWorkDay(DateTime date, string countryCode, string region);
-        Task<List<HolidayItemResponse>> GetHolidayForYear(int year, string countryCode, string region);
+        Task<bool> IsPublicHoliday(DateTime date, string countryCode, string? region);
+        Task<bool> IsWorkDay(DateTime date, string countryCode, string? region);
+        Task<List<HolidayItemResponse>> GetHolidayForYear(int year, string countryCode, string? region);
+        Task<List<CountryResponse>> GetCountries();
     }
 
     public class EnricoService : IEnricoService
@@ -20,7 +22,7 @@ namespace Civitta.Task1.Api.Services
         {
             _client = new RestClient(BaseUrl);
         }
-        public async Task<bool> IsPublicHoliday(DateTime date, string countryCode, string region)
+        public async Task<bool> IsPublicHoliday(DateTime date, string countryCode, string? region)
         {
             var request = new RestRequest("isPublicHoliday", Method.Get);
             request.AddParameter("date", date.ToString("yyyy-MM-dd"));
@@ -31,7 +33,7 @@ namespace Civitta.Task1.Api.Services
             return response?.IsPublicHoliday ?? false;
         }
 
-        public async Task<bool> IsWorkDay(DateTime date, string countryCode, string region)
+        public async Task<bool> IsWorkDay(DateTime date, string countryCode, string? region)
         {
             var request = new RestRequest("isWorkDay", Method.Get);
             request.AddParameter("date", date.ToString("yyyy-MM-dd"));
@@ -42,7 +44,7 @@ namespace Civitta.Task1.Api.Services
             return response?.IsWorkDay ?? false;
         }
 
-        public async Task<List<HolidayItemResponse>> GetHolidayForYear(int year, string countryCode, string region)
+        public async Task<List<HolidayItemResponse>> GetHolidayForYear(int year, string countryCode, string? region)
         {
             var request = new RestRequest("getHolidaysForYear", Method.Get);
             request.AddParameter("year", year);
@@ -53,7 +55,22 @@ namespace Civitta.Task1.Api.Services
             return response;
         }
 
+        public async Task<List<CountryResponse>> GetCountries()
+        {
+            var request = new RestRequest("getSupportedCountries", Method.Get);
 
+            var response = await _client.GetAsync<List<CountryResponse>>(request);
+            return response;
+        }
+
+        public class CountryResponse
+        {
+            public string CountryCode { get; set; }
+            public string FullName { get; set; }
+            public Date FromDate { get; set; }
+            public Date ToDate { get; set; }
+            public List<string> Regions { get; set; }
+        }
         public class HolidayItemResponse
         {
             public Date Date { get; set; }
