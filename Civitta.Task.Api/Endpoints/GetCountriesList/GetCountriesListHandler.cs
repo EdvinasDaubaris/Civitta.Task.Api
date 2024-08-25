@@ -1,4 +1,6 @@
-﻿using Civitta.Task1.Api.Models;
+﻿using Azure;
+using Azure.Core;
+using Civitta.Task1.Api.Models;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
