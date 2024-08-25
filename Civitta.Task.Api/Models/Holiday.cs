@@ -7,7 +7,6 @@
         public Country Country { get; set; }
         public int? CountryRegionId { get; set; }
         public CountryRegion? CountryRegion { get; set; }
-
         public string Name { get; set; }
         public DateTime Date { get; set; }
     }
