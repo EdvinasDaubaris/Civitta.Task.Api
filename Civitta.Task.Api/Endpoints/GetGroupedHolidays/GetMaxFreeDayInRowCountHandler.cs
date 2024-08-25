@@ -27,6 +27,29 @@ namespace Civitta.Task1.Api.Endpoints.GetGroupedHolidays
             var region = country.Regions.FirstOrDefault(s=>s.Code == request.Region);
             var regionId = region?.Id;
 
+            if (country == null)
+            {
+                AddError(r => r.CountryCode, "Country code is invalid");
+            }
+            if (country.Regions.Any())
+            {
+                if (string.IsNullOrEmpty(request.Region))
+                {
+                    AddError(r => r.Region, "You must select region for this country.");
+                }
+                else if (country.Regions.FirstOrDefault(s => s.Code == request.Region) == null)
+                {
+                    AddError(r => r.Region, "Region you selected does not exist.");
+                }
+
+            }
+            if (country.DataFromDate.Year > request.Year || country.DataToDate.Year < request.Year)
+            {
+                AddError(r => r.Year, $"No data for Year {request.Year}. please select between {country.DataFromDate.Year} and {country.DataToDate.Year}");
+            }
+
+            ThrowIfAnyErrors();
+
             var groupedHolidays = _dbContext.Holidays
                 .Where(s => s.CountryRegionId == regionId && s.CountryId == country.Id && s.Date.Year == request.Year)
                 .OrderBy(s=>s.Date)

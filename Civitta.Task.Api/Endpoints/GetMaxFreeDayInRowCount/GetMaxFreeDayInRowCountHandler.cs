@@ -23,6 +23,32 @@ namespace Civitta.Task1.Api.Endpoints.GetMaxFreeDayInRowCount
 
         public override async Task HandleAsync(GetMaxFreeDayInRowCountRequest request, CancellationToken ct)
         {
+            var country = _dbContext.Countries.Include(s => s.Regions).FirstOrDefault(s => s.Code == request.CountryCode);
+
+            if(country == null)
+            {
+                AddError(r => r.CountryCode, "Country code is invalid");
+            }
+            if (country.Regions.Any())
+            {
+                if (string.IsNullOrEmpty(request.Region))
+                {
+                    AddError(r => r.Region, "You must select region for this country.");
+                }
+                else if (country.Regions.FirstOrDefault(s => s.Code == request.Region) == null)
+                {
+                    AddError(r => r.Region, "Region you selected does not exist.");
+                }
+
+            }
+            if(country.DataFromDate.Year > request.Year || country.DataToDate.Year < request.Year)
+            {
+                AddError(r => r.Year, $"No data for Year {request.Year}. please select between {country.DataFromDate.Year} and {country.DataToDate.Year}");
+            }
+
+            ThrowIfAnyErrors();
+
+
             var freeDayCount = await _dbContext.MaximumFreeDayInRows
                 .FirstOrDefaultAsync(s=>s.CountryCode == request.CountryCode && s.Year == request.Year && s.Region == request.Region);
 
