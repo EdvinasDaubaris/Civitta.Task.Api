@@ -32,9 +32,9 @@ namespace Civitta.Task1.Api.Endpoints.GetCountriesList
         {
             if (!_cache.TryGetValue("Countries", out List<GetCountriesListResponse> countries))
             {
-                if(!_dbContext.Countries.Any()) // initialize
+                if(_dbContext.Countries.Count() == 0) // initialize
                 {
-                    CreateCountriesAndRegions();
+                    await CreateCountriesAndRegions();
                 }
 
                 countries = await _dbContext.Countries.Select(country => new GetCountriesListResponse
@@ -51,7 +51,7 @@ namespace Civitta.Task1.Api.Endpoints.GetCountriesList
             Response = countries;
         }
 
-        public async void CreateCountriesAndRegions()
+        public async Task CreateCountriesAndRegions()
         {
             var countriesToCreate = await _enricoService.GetCountries();
             foreach (var item in countriesToCreate)
@@ -74,6 +74,7 @@ namespace Civitta.Task1.Api.Endpoints.GetCountriesList
                     });
                 }
             }
+
             _dbContext.SaveChanges();
 
 

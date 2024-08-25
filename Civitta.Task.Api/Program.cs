@@ -30,7 +30,6 @@ var app = builder.Build();
 
 
 
-app
-   .UseAuthorization().UseFastEndpoints().UseSwaggerGen();
+app.UseAuthorization().UseFastEndpoints().UseSwaggerGen();
 
 app.Run();
