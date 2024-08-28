@@ -7,11 +7,11 @@ using Microsoft.Identity.Client;
 using System.Diagnostics.Metrics;
 namespace Civitta.Task1.Api.Endpoints.GetDayStatus
 {
-    public class GetCountriesListHandler : Endpoint<GetCountriesListRequest,GetCountriesListResponse>
+    public class GetDayStatusHandler : Endpoint<GetDayStatusRequest,GetDayStatusResponse>
     {
         private readonly DatabaseContext _dbContext;
         private readonly IEnricoService _enricoService;
-        public GetCountriesListHandler(DatabaseContext dbContext, IEnricoService enricoService)
+        public GetDayStatusHandler(DatabaseContext dbContext, IEnricoService enricoService)
         {
             _dbContext = dbContext;
             _enricoService = enricoService;
@@ -23,7 +23,7 @@ namespace Civitta.Task1.Api.Endpoints.GetDayStatus
             AllowAnonymous();
         }
 
-        public override async Task HandleAsync(GetCountriesListRequest request, CancellationToken ct)
+        public override async Task HandleAsync(GetDayStatusRequest request, CancellationToken ct)
         {
             var country = _dbContext.Countries.Include(s => s.Regions).FirstOrDefault(s => s.Code == request.CountryCode);
             if (country == null)
@@ -57,7 +57,7 @@ namespace Civitta.Task1.Api.Endpoints.GetDayStatus
 
             if (dayStatus != null)
             {
-                Response = new GetCountriesListResponse
+                Response = new GetDayStatusResponse
                 {
                     IsWorkDay = dayStatus.IsWorkDay,
                     IsHoliday = dayStatus.IsHoliday,
@@ -70,7 +70,7 @@ namespace Civitta.Task1.Api.Endpoints.GetDayStatus
                 var isWorkday = await _enricoService.IsWorkDay(normalizeDate, request.CountryCode, request.Region);
 
 
-                Response = new GetCountriesListResponse
+                Response = new GetDayStatusResponse
                 {
                     IsWorkDay = isWorkday,
                     IsHoliday = isHoliday,

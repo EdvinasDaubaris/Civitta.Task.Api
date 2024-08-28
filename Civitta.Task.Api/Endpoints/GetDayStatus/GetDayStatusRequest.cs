@@ -1,6 +1,6 @@
 ﻿namespace Civitta.Task1.Api.Endpoints.GetDayStatus
 {
-    public class GetCountriesListRequest
+    public class GetDayStatusRequest
     {
         public DateTime Date { get; set; }
         public string CountryCode { get; set; }
